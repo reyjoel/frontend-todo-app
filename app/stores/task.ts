@@ -106,7 +106,7 @@ export const useTaskStore = defineStore('task', {
           body: {
             tasks: newOrder.map((task, index) => ({
               id: task.id,
-              order: index
+              position: index
             }))
           }
         })
