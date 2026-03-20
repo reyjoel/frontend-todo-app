@@ -147,8 +147,3 @@ NUXT_PUBLIC_API_BASE=http://localhost:8000/api
 * Components are intentionally lightweight
 * Safe to extend with additional features like tagging, priorities, etc.
 
----
-
-## Author Notes
-
-This project follows practical patterns used in production Vue/Nuxt applications, balancing simplicity with scalability.
