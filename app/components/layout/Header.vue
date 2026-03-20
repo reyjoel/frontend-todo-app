@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Search } from 'lucide-vue-next'
+import { Search, LogOut } from 'lucide-vue-next'
 const auth = useAuthStore()
 const taskStore = useTaskStore()
 
@@ -34,6 +34,7 @@ const logout = async () => {
         class="w-8 h-8 bg-gray-300 rounded-full cursor-pointer"
         @click="toggleMenu"
       />
+      
 
       <!-- Dropdown -->
       <div
@@ -42,9 +43,9 @@ const logout = async () => {
       >
         <button
           @click="logout"
-          class="w-full text-left px-4 py-2 hover:bg-gray-100"
+          class="w-full text-left px-4 py-2"
         >
-          Logout
+          Logout 
         </button>
       </div>
     </div>

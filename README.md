@@ -1,75 +1,154 @@
-# Nuxt Minimal Starter
+# 📝 Todo App (Nuxt 4 + Pinia)
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+## Overview
+
+This is a task management frontend built with **Nuxt 4**, **Pinia**, and **TailwindCSS**.
+It interacts with a backend API to perform CRUD operations on tasks.
+
+The app is designed with scalability and maintainability in mind, using modular architecture and clear separation of concerns.
+
+---
+
+## Tech Stack
+
+* **Nuxt 4** – Application framework
+* **Vue 3 (Composition API)** – UI layer
+* **Pinia** – State management
+* **TailwindCSS** – Styling
+* **TypeScript** – Type safety
+
+---
+
+## Project Structure
+
+```
+app/
+  components/
+    layout/
+    task/
+  composables/
+    useApi.ts
+  pages/
+    index.vue
+    login.vue
+  stores/
+    auth.ts
+    task.ts
+```
+
+---
+
+## Architecture
+
+### State Management
+
+We use **Pinia** for centralized state.
+
+* `taskStore` handles:
+
+  * Task list state
+  * Filtering (search/date)
+  * CRUD operations
+
+### API Handling
+
+All API calls go through:
+
+```
+useApi()
+```
+
+This ensures:
+
+* Consistent request handling
+* Centralized headers/auth logic
+
+---
+
+## Data Flow
+
+```
+UI Component
+   ↓
+Pinia Store Action
+   ↓
+API Request (useApi)
+   ↓
+State Update
+   ↓
+Reactive UI Update
+```
+
+---
+
+## Key Features
+
+* Create, update, delete tasks
+* Toggle completion state
+* Filter by date
+* Search tasks
+* Optimistic UI updates (partial)
+
+---
+
+## Design Decisions
+
+### Why Pinia?
+
+* Lightweight and simple
+* Native Vue 3 support
+* Easy debugging
+
+### Why Composables?
+
+* Promote reuse
+* Decouple logic from components
+
+### Why Component Segmentation?
+
+* Improves readability
+* Enables independent testing
+
+---
+
+## Areas for Improvement (Future Work)
+
+* Add centralized error handling
+* Introduce request caching (Vue Query or custom)
+* Improve loading state granularity
+* Add unit and integration tests
+* Implement debounce for search
+
+---
 
 ## Setup
 
-Make sure to install dependencies:
-
 ```bash
-# npm
-npm install
-
-# pnpm
 pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
-```
-
-## Development Server
-
-Start the development server on `http://localhost:3000`:
-
-```bash
-# npm
-npm run dev
-
-# pnpm
 pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
 ```
 
-## Production
+---
 
-Build the application for production:
+## Environment
 
-```bash
-# npm
-npm run build
+Create `.env`:
 
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
+```
+NUXT_PUBLIC_API_BASE=http://localhost:8000/api
 ```
 
-Locally preview production build:
+---
 
-```bash
-# npm
-npm run preview
+## Notes for Handoff
 
-# pnpm
-pnpm preview
+* Business logic is primarily in `taskStore`
+* API abstraction is handled via `useApi`
+* Components are intentionally lightweight
+* Safe to extend with additional features like tagging, priorities, etc.
 
-# yarn
-yarn preview
+---
 
-# bun
-bun run preview
-```
+## Author Notes
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+This project follows practical patterns used in production Vue/Nuxt applications, balancing simplicity with scalability.

@@ -37,7 +37,8 @@ const placeholder = computed(() =>
       <input
         v-model="input"
         :placeholder="placeholder"
-        class="w-full border rounded-xl p-4 pr-12" 
+        @keyup.enter="submit"
+        class="w-full border rounded-xl p-4 pr-12"
       />
 
       <button

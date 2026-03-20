@@ -5,16 +5,13 @@ import type { Task } from '@/types/task'
 export const useTaskStore = defineStore('task', {
   state: () => ({
     tasks: [] as Task[],
-    allTasks: [] as Task[],
     selectedDate: getLocalDate(),
     search: '',
     loading: false
   }),
 
   getters: {
-    displayTasks: (state) => {
-      return state.search ? state.allTasks : state.tasks
-    }
+    displayTasks: (state) => state.tasks
   },
 
   actions: {
@@ -23,9 +20,12 @@ export const useTaskStore = defineStore('task', {
       this.loading = true
 
       try {
-        const res = await api<{ data: Task[] }>(
-          `/tasks?date=${this.selectedDate}`
-        )
+        const query = new URLSearchParams({
+          date: this.selectedDate,
+          ...(this.search ? { q: this.search } : {})
+        }).toString()
+
+        const res = await api<{ data: Task[] }>(`/tasks?${query}`)
 
         this.tasks = res.data
       } catch (err) {
@@ -35,23 +35,9 @@ export const useTaskStore = defineStore('task', {
       }
     },
 
-    async fetchAllTasks() {
-      const api = useApi()
-
-      if (!this.search.trim()) {
-        this.allTasks = []
-        return
-      }
-
-      try {
-        const res = await api<{ data: Task[] }>(
-          `/tasks/search?q=${encodeURIComponent(this.search)}`
-        )
-
-        this.allTasks = res.data
-      } catch (err) {
-        console.error('search error:', err)
-      }
+    async setSearch(value: string) {
+      this.search = value
+      await this.fetchTasks()
     },
 
     async createTask(statement: string) {
@@ -104,20 +90,11 @@ export const useTaskStore = defineStore('task', {
         await api('/tasks/reorder', {
           method: 'POST',
           body: {
-            tasks: newOrder.map((task, index) => ({
-              id: task.id,
-              position: index
-            }))
+            tasks: newOrder.map(task => task.id)
           }
         })
       } catch (err) {
         console.error('reorder error:', err)
-
-        // fallback (optional localStorage)
-        localStorage.setItem(
-          `order-${this.selectedDate}`,
-          JSON.stringify(newOrder.map(t => t.id))
-        )
       }
     },
 

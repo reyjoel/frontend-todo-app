@@ -62,7 +62,7 @@ watch(
 
     timer = setTimeout(() => {
       if (val) {
-        taskStore.fetchAllTasks()
+        taskStore.fetchTasks()
       }
     }, 300)
   }
