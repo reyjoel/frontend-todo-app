@@ -1,149 +1,108 @@
-# 📝 Todo App (Nuxt 4 + Pinia)
+# Taskr — Frontend
 
-## Overview
+A focused task management app built with Nuxt 4, Pinia, and TailwindCSS.
 
-This is a task management frontend built with **Nuxt 4**, **Pinia**, and **TailwindCSS**.
-It interacts with a backend API to perform CRUD operations on tasks.
+## Stack
 
-The app is designed with scalability and maintainability in mind, using modular architecture and clear separation of concerns.
+| Layer | Technology |
+|---|---|
+| Framework | Nuxt 4 |
+| UI | Vue 3 Composition API |
+| State | Pinia |
+| Styling | TailwindCSS v3 + custom theme tokens |
+| Type safety | TypeScript (strict) |
+| Icons | Lucide Vue Next |
+| Drag & drop | vuedraggable |
 
----
+## Getting Started
 
-## Tech Stack
+```bash
+pnpm install
+cp .env.copy .env   # then set NUXT_PUBLIC_API_BASE
+pnpm dev            # http://localhost:3000
+```
 
-* **Nuxt 4** – Application framework
-* **Vue 3 (Composition API)** – UI layer
-* **Pinia** – State management
-* **TailwindCSS** – Styling
-* **TypeScript** – Type safety
+### Environment
 
----
+```env
+NUXT_PUBLIC_API_BASE=http://localhost:8000/api
+```
 
 ## Project Structure
 
 ```
 app/
-  components/
-    layout/
-    task/
-  composables/
-    useApi.ts
-  pages/
-    index.vue
-    login.vue
-  stores/
-    auth.ts
-    task.ts
+├── assets/css/main.css        # Tailwind + Google Fonts
+├── components/
+│   ├── layout/
+│   │   ├── Header.vue         # Search + user menu
+│   │   └── Sidebar.vue        # Date navigation + progress
+│   └── task/
+│       ├── TaskInput.vue      # Add-task input
+│       ├── TaskList.vue       # Drag/search orchestration
+│       └── TaskRow.vue        # Shared task row component
+├── composables/
+│   └── useApi.ts              # Authenticated $fetch wrapper
+├── layouts/
+│   ├── auth.vue               # Login shell
+│   └── default.vue            # App shell (sidebar + header)
+├── middleware/
+│   ├── auth.ts                # Guard: requires login
+│   └── guest.ts               # Guard: redirects if logged in
+├── pages/
+│   ├── index.vue              # Task list + empty state
+│   └── login.vue              # Split-panel login page
+├── stores/
+│   ├── auth.ts                # Authentication store
+│   └── task.ts                # Task CRUD + filters
+├── types/
+│   └── task.ts                # Task interface
+└── utils/
+    └── date.ts                # getLocalDate() helper
+tailwind.config.ts             # Design tokens
+nuxt.config.ts                 # Nuxt configuration
 ```
 
----
+## Features
 
-## Architecture
-
-### State Management
-
-We use **Pinia** for centralized state.
-
-* `taskStore` handles:
-
-  * Task list state
-  * Filtering (search/date)
-  * CRUD operations
-
-### API Handling
-
-All API calls go through:
-
-```
-useApi()
-```
-
-This ensures:
-
-* Consistent request handling
-* Centralized headers/auth logic
-
----
+- Create, edit, delete, and complete tasks
+- Drag-and-drop reordering (persisted to backend)
+- Date navigation — browse tasks by day
+- Live search with 300 ms debounce
+- "Getting Started" illustrated empty state
+- Split-panel login with loading and error states
+- Cookie-based authentication with middleware guards
+- Progress tracker in sidebar
 
 ## Data Flow
 
 ```
 UI Component
-   ↓
-Pinia Store Action
-   ↓
-API Request (useApi)
-   ↓
+    ↓  calls store action
+Pinia Store
+    ↓  calls useApi()
+Backend REST API
+    ↓  response
 State Update
-   ↓
-Reactive UI Update
+    ↓  Vue reactivity
+UI re-renders
 ```
 
----
+## Design System
 
-## Key Features
+Fonts: **Playfair Display** (headings) + **Outfit** (body)
 
-* Create, update, delete tasks
-* Toggle completion state
-* Filter by date
-* Search tasks
-* Optimistic UI updates (partial)
+Custom color tokens defined in `tailwind.config.ts`:
 
----
+- `canvas` — page background (`#FAFAF7`)
+- `ink` / `ink-soft` / `ink-muted` — text hierarchy
+- `cream` / `cream-dark` — surfaces and borders
+- `amber-accent` — brand accent and interactive focus
 
-## Design Decisions
+## Architecture Notes
 
-### Why Pinia?
-
-* Lightweight and simple
-* Native Vue 3 support
-* Easy debugging
-
-### Why Composables?
-
-* Promote reuse
-* Decouple logic from components
-
-### Why Component Segmentation?
-
-* Improves readability
-* Enables independent testing
-
----
-
-## Areas for Improvement (Future Work)
-
-* Add centralized error handling
-* Introduce request caching (Vue Query or custom)
-* Improve loading state granularity
-* Add unit and integration tests
-* Implement debounce for search
-
----
-
-## Setup
-
-```bash
-pnpm install
-pnpm dev
-```
-
----
-
-## Environment
-
-Create `.env`:
-
-```
-NUXT_PUBLIC_API_BASE=http://localhost:8000/api
-```
-
----
-
-## Notes for Handoff
-
-* Business logic is primarily in `taskStore`
-* API abstraction is handled via `useApi`
-* Components are intentionally lightweight
-* Safe to extend with additional features like tagging, priorities, etc.
-
+- All HTTP calls go through `useApi()` — never raw `$fetch`
+- Store actions own all API logic; components stay thin
+- `TaskRow.vue` is the single task row component — used in both drag and search modes
+- Auth token lives in the `token` cookie (read by middleware) and `authStore.token` (reactive UI)
+- `vuedraggable` is wrapped in `<client-only>` since it requires DOM access

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, defineAsyncComponent } from 'vue'
-import { Trash, Check } from 'lucide-vue-next'
+import type { Task } from '@/types/task'
 
 const Draggable = defineAsyncComponent(() => import('vuedraggable'))
 
@@ -13,57 +13,42 @@ onMounted(() => {
   taskStore.fetchTasks()
 })
 
-// Start Edit
-const startEdit = (task: any) => {
+const startEdit = (task: Task) => {
   editingId.value = task.id
   editText.value = task.statement
 }
 
-// Cancel Edit
 const cancelEdit = () => {
   editingId.value = null
   editText.value = ''
 }
 
-// Save Edit
-const saveEdit = async (task: any) => {
+const saveEdit = async (task: Task) => {
   if (!editText.value.trim()) return
-
   await taskStore.updateTask(task.id, editText.value.trim())
   cancelEdit()
 }
 
-// Delete
 const confirmDelete = (id: number) => {
   if (confirm('Are you sure you want to delete this task?')) {
     taskStore.deleteTask(id)
   }
 }
 
-// Toggle
-const toggleTask = async (id: number) => {
-  await taskStore.toggleTask(id)
-}
-
-// Drag
 const onDragEnd = () => {
   if (!taskStore.search) {
     taskStore.reorderTasks(taskStore.tasks)
   }
 }
 
-// SEARCH
-let timer: any
+let timer: ReturnType<typeof setTimeout>
 
 watch(
   () => taskStore.search,
   (val) => {
     clearTimeout(timer)
-
     timer = setTimeout(() => {
-      if (val) {
-        taskStore.fetchTasks()
-      }
+      if (val) taskStore.fetchTasks()
     }, 300)
   }
 )
@@ -72,134 +57,68 @@ watch(
 <template>
   <div class="flex flex-col h-full">
 
-    <client-only>
-      <Draggable
-        v-if="!taskStore.search"
-        v-model="taskStore.tasks"
-        item-key="id"
-        ghost-class="opacity-50"
-        @end="onDragEnd"
-        class="flex-1 overflow-auto"
-      >
-        <template #item="{ element: task }">
-          <div
-            class="flex items-center justify-between p-3 border-b group hover:bg-gray-50 transition"
-          >
+    <!-- LOADING -->
+    <div v-if="taskStore.loading" class="flex-1 flex items-center justify-center">
+      <div class="w-6 h-6 border-2 border-amber-accent border-t-transparent rounded-full animate-spin" />
+    </div>
 
-            <!-- LEFT -->
-            <div class="flex items-center gap-2 flex-1">
-
-              <!-- TOGGLE -->
-              <button
-                @click="toggleTask(task.id)"
-                class="w-5 h-5 flex items-center justify-center border rounded"
-                :class="task.is_completed ? 'bg-green-500 text-white' : ''"
-              >
-                <Check size="14" />
-              </button>
-
-              <!-- EDIT -->
-              <div class="flex-1">
-                <input
-                  v-if="editingId === task.id"
-                  v-model="editText"
-                  @blur="saveEdit(task)"
-                  @keyup.enter="saveEdit(task)"
-                  @keyup.esc="cancelEdit"
-                  class="w-full border p-1 rounded"
-                />
-
-                <span
-                  v-else
-                  @click="startEdit(task)"
-                  class="cursor-pointer"
-                  :class="task.is_completed
-                    ? 'line-through text-gray-400'
-                    : 'text-gray-800'"
-                >
-                  {{ task.statement }}
-                </span>
-              </div>
-            </div>
-
-            <!-- ACTIONS -->
-            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition">
-              <button
-                @click="confirmDelete(task.id)"
-                class="text-red-500 hover:text-red-700"
-              >
-                <Trash size="16" />
-              </button>
-            </div>
-
-          </div>
-        </template>
-      </Draggable>
-    </client-only>
-
-    <!-- 🔍 SEARCH MODE (SAME UI, NO DRAG) -->
-    <div
-      v-if="taskStore.search"
-      class="flex-1 overflow-auto"
-    >
-      <div
-        v-for="task in taskStore.displayTasks"
-        :key="task.id"
-        class="flex items-center justify-between p-3 border-b group hover:bg-gray-50 transition"
-      >
-
-        <!-- SAME CONTENT -->
-        <div class="flex items-center gap-2 flex-1">
-
-          <button
-            @click="toggleTask(task.id)"
-            class="w-5 h-5 flex items-center justify-center border rounded"
-            :class="task.is_completed ? 'bg-green-500 text-white' : ''"
-          >
-            <Check size="14" />
-          </button>
-
-          <div class="flex-1">
-            <input
-              v-if="editingId === task.id"
-              v-model="editText"
-              @blur="saveEdit(task)"
-              @keyup.enter="saveEdit(task)"
-              @keyup.esc="cancelEdit"
-              class="w-full border p-1 rounded"
+    <template v-else>
+      <!-- DRAG MODE -->
+      <client-only>
+        <Draggable
+          v-if="!taskStore.search"
+          v-model="taskStore.tasks"
+          item-key="id"
+          ghost-class="opacity-30"
+          @end="onDragEnd"
+          class="flex-1 overflow-auto"
+        >
+          <template #item="{ element: task }">
+            <TaskRow
+              :task="task"
+              :editing-id="editingId"
+              :edit-text="editText"
+              :draggable="true"
+              @toggle="taskStore.toggleTask"
+              @delete="confirmDelete"
+              @start-edit="startEdit"
+              @save-edit="saveEdit"
+              @cancel-edit="cancelEdit"
+              @update:edit-text="editText = $event"
             />
+          </template>
+        </Draggable>
+      </client-only>
 
-            <span
-              v-else
-              @click="startEdit(task)"
-              class="cursor-pointer"
-              :class="task.is_completed
-                ? 'line-through text-gray-400'
-                : 'text-gray-800'"
-            >
-              {{ task.statement }}
-            </span>
-          </div>
+      <!-- SEARCH MODE -->
+      <div v-if="taskStore.search" class="flex-1 overflow-auto">
+        <TaskRow
+          v-for="task in taskStore.displayTasks"
+          :key="task.id"
+          :task="task"
+          :editing-id="editingId"
+          :edit-text="editText"
+          :draggable="false"
+          @toggle="taskStore.toggleTask"
+          @delete="confirmDelete"
+          @start-edit="startEdit"
+          @save-edit="saveEdit"
+          @cancel-edit="cancelEdit"
+          @update:edit-text="editText = $event"
+        />
+
+        <div
+          v-if="taskStore.displayTasks.length === 0"
+          class="flex flex-col items-center justify-center py-16 text-ink-muted/50 font-body"
+        >
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" class="mb-3 opacity-40">
+            <circle cx="20" cy="20" r="14" stroke="currentColor" stroke-width="2.5"/>
+            <path d="M30 30L42 42" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+          <p class="text-sm">No results for "<span class="text-ink-soft font-medium">{{ taskStore.search }}</span>"</p>
         </div>
-
-        <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition">
-          <button
-            @click="confirmDelete(task.id)"
-            class="text-red-500 hover:text-red-700"
-          >
-            <Trash size="16" />
-          </button>
-        </div>
-
       </div>
-    </div>
-
-    <div
-      v-if="taskStore.displayTasks.length === 0 && taskStore.search"
-      class="text-center text-gray-400 mt-10"
-    >
-      No results found
-    </div>
+    </template>
 
   </div>
 </template>

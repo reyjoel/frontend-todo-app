@@ -1,16 +1,11 @@
 <template>
-  <div class="h-screen flex bg-gray-100 rounded-2xl overflow-hidden">
-
-    <!-- Sidebar -->
+  <div class="h-screen flex bg-canvas overflow-hidden font-body">
     <LayoutSidebar />
-
-    <!-- Main -->
-    <div class="flex-1 flex flex-col">
+    <div class="flex-1 flex flex-col min-w-0">
       <LayoutHeader />
-      <div class="flex-1 p-10">
+      <div class="flex-1 overflow-auto scrollbar-thin">
         <slot />
       </div>
     </div>
-
   </div>
 </template>

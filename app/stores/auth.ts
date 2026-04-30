@@ -1,5 +1,11 @@
 import { defineStore } from 'pinia'
 
+interface LoginResponse {
+  data: {
+    token: string
+  }
+}
+
 export const useAuthStore = defineStore('auth', {
   state: () => {
     const token = useCookie<string | null>('token').value || null
@@ -15,14 +21,14 @@ export const useAuthStore = defineStore('auth', {
     async login(email: string, password: string) {
       const api = useApi()
 
-      const res: any = await api('/login', {
+      const res = await api<LoginResponse>('/login', {
         method: 'POST',
         body: { email, password }
       })
 
       const token = useCookie<string | null>('token')
       token.value = res.data.token
-      this.token = res.token
+      this.token = res.data.token
     },
 
     async logout() {
